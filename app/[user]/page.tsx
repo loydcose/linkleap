@@ -1,6 +1,21 @@
 import Image from "next/image"
 import { Instagram, Twitter, Youtube } from "lucide-react"
 import { Tiktok } from "../../icons/Tiktok"
+import { db, auth, storage } from "../../firebase"
+import {
+  getDocs,
+  collection,
+  addDoc,
+  serverTimestamp,
+  doc,
+  getDoc,
+  query,
+  onSnapshot,
+  where,
+} from "firebase/firestore"
+import { notFound } from "next/navigation"
+import { getStorage, ref, getDownloadURL } from "firebase/storage"
+import Link from "next/link"
 
 const socials = [
   {
@@ -29,13 +44,45 @@ const socials = [
   },
 ]
 
-export default function Home() {
+export default async function Home({
+  params: { user },
+}: {
+  params: { user: string }
+}) {
+  let foundUser: any = null
+
+  try {
+    const q = query(collection(db, "user"), where("username", "==", user))
+    const documentSnapshots = await getDocs(q)
+
+    if (documentSnapshots.docs.length === 0) {
+      throw Error("Not found!")
+    } else {
+      let doc = documentSnapshots.docs[0].data()
+      // get profile picture
+      const userProfileRef = ref(storage, `${doc.image}`)
+      const userProfileUrl = await getDownloadURL(userProfileRef)
+      // get media icons
+      const newMedias = await Promise.all(
+        doc.medias.map(async (media: any) => {
+          const imageRef = ref(storage, `${media.icon}`)
+          const url = await getDownloadURL(imageRef)
+          return { ...media, icon: url }
+        })
+      )
+      foundUser = { ...doc, medias: newMedias, image: userProfileUrl }
+    }
+  } catch (error) {
+    console.error(error)
+    notFound()
+  }
+
   return (
     <main className="w-11/12 max-w-md mx-auto min-h-screen flex items-center justify-center">
       <section className="bg-white rounded-xl p-8 w-full shadow-lg">
         <div className="relative w-[137px] h-[137px] rounded-full overflow-hidden ring ring-violet-600 ring-offset-4 mx-auto mb-4">
           <Image
-            src="/man.jpg"
+            src={foundUser.image}
             alt="man"
             className="w-full h-full object-cover"
             width={137}
@@ -43,24 +90,30 @@ export default function Home() {
           />
         </div>
         <h1 className="text-xl font-extrabold tracking-tight mb-1 text-center">
-          Hello, Jhon Espinosa!
+          Hello, {foundUser.firstName} {foundUser.lastName}!
         </h1>
-        <p className="mb-10 text-zinc-600 text-center">
-          Hi! this is my bio, have fun! ⭐
-        </p>
+
+        {foundUser?.bio && (
+          <p className="mb-10 text-zinc-600 text-center">{foundUser.bio}</p>
+        )}
 
         <div className="flex flex-col gap-4">
-          {socials.map((social) => {
-            const Icon = social.icon
+          {foundUser.medias.map((media: any) => {
             return (
-              <button
-                key={social.id}
-                type="button"
+              <Link
+                href={media.link}
+                key={media.name}
                 className="border border-zinc-200 rounded-lg px-6 py-3 hover:bg-zinc-100 flex items-center gap-4"
               >
-                <Icon className="text-zinc-400" />
-                {social.text}
-              </button>
+                <object
+                  data={media.icon}
+                  type="image/svg+xml"
+                  className="text-4xl"
+                >
+                  Your browser does not support SVG
+                </object>
+                {media.displayText}
+              </Link>
             )
           })}
         </div>
