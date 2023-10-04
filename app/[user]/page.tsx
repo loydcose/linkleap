@@ -54,6 +54,7 @@ export default async function Home({
   try {
     const q = query(collection(db, "user"), where("username", "==", user))
     const documentSnapshots = await getDocs(q)
+    console.log(documentSnapshots.docs[0].data())
 
     if (documentSnapshots.docs.length === 0) {
       throw Error("Not found!")
@@ -63,13 +64,13 @@ export default async function Home({
       const userProfileRef = ref(storage, `${doc.image}`)
       const userProfileUrl = await getDownloadURL(userProfileRef)
       // get media icons
-      const newMedias = await Promise.all(
+      const newMedias = doc?.medias ? await Promise.all(
         doc.medias.map(async (media: any) => {
           const imageRef = ref(storage, `${media.icon}`)
           const url = await getDownloadURL(imageRef)
           return { ...media, icon: url }
         })
-      )
+      ) : []
       foundUser = { ...doc, medias: newMedias, image: userProfileUrl }
     }
   } catch (error) {
