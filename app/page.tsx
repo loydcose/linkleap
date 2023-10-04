@@ -1,14 +1,13 @@
 "use client"
 
-import { Pencil } from "lucide-react"
+import { LogOut, Pencil } from "lucide-react"
 import Image from "next/image"
 import { db, auth, storage } from "../firebase"
 import { useRouter } from "next/navigation"
 import { doc, getDoc } from "firebase/firestore"
 import { useEffect, useState } from "react"
 import { getDownloadURL, ref } from "firebase/storage"
-import { onAuthStateChanged } from "firebase/auth"
-
+import { onAuthStateChanged, signOut } from "firebase/auth"
 
 export default function Home() {
   const router = useRouter()
@@ -40,10 +39,27 @@ export default function Home() {
     })
   }
 
-  if (!currentUser) return 
+  const handleLogOut = async () => {
+    try {
+      await signOut(auth)
+      router.push("/sign-in")
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  if (!currentUser) return
 
   return (
-    <main className="w-11/12 max-w-md mx-auto min-h-screen flex items-center justify-center">
+    <main className="w-11/12 max-w-md mx-auto min-h-screen flex items-center justify-center relative">
+      <button
+        type="button"
+        onClick={handleLogOut}
+        className="absolute top-6 right-0 p-2 rounded-lg hover:bg-zinc-200 transition-all"
+        title="Logout"
+      >
+        <LogOut className="text-zinc-400" />
+      </button>
       <section className="bg-white rounded-xl p-8 w-full shadow-lg">
         <div className="relative w-[114px] h-[114px] rounded-full overflow-hidden ring ring-violet-600 ring-offset-4 mx-auto mb-4">
           {currentUser?.image && (
