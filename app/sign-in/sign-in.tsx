@@ -3,12 +3,14 @@
 import Image from "next/image"
 import { auth, googleProvider, db } from "../../firebase"
 import {
+  onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
 } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { doc, getDoc, setDoc } from "firebase/firestore"
+import { useEffect } from "react"
 
 const socials = [
   {
@@ -28,6 +30,13 @@ const socials = [
 export default function SignIn() {
   const router = useRouter()
 
+  // prevents signed user on accessing this page
+  useEffect(() => {
+    onAuthStateChanged(auth, async (user) => {
+      if (user) router.push("/")
+    })
+  }, [router])
+
   const handleGoogleSignIn = async () => {
     try {
       const userCredential = await signInWithPopup(auth, googleProvider)
@@ -39,12 +48,14 @@ export default function SignIn() {
       if (!userDoc.exists()) {
         let userData: any = {
           uid: user.uid,
-          username: `${user!.displayName!.split(" ")[0]}-${new Date().getTime()}`,
+          username: `${
+            user!.displayName!.split(" ")[0]
+          }-${new Date().getTime()}`,
           firstName: user.displayName ? user.displayName.split(" ")[0] : "",
           lastName: user.displayName ? user.displayName.split(" ")[1] : "",
           accent: "#000000",
           bio: "",
-          image: "/user/clapping-pepe.gif"
+          image: "/user/clapping-pepe.gif",
         }
         await setDoc(usersRef, userData)
       }
@@ -70,7 +81,9 @@ export default function SignIn() {
         <h1 className="text-3xl font-extrabold tracking-tighter text-center mb-2">
           Welcome to <span className="text-violet-600">Linkleap</span>
         </h1>
-        <button onClick={() => console.log(auth.currentUser)}>check auth</button>
+        <button onClick={() => console.log(auth.currentUser)}>
+          check auth
+        </button>
         <p className="mb-6 text-zinc-500 text-center">
           Login below, and start sharing your link to everyone!
         </p>
