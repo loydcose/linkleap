@@ -39,6 +39,7 @@ export default function SignIn() {
       if (!userDoc.exists()) {
         let userData: any = {
           uid: user.uid,
+          username: `${user!.displayName!.split(" ")[0]}-${new Date().getTime()}`,
           firstName: user.displayName ? user.displayName.split(" ")[0] : "",
           lastName: user.displayName ? user.displayName.split(" ")[1] : "",
           accent: "#000000",
@@ -69,6 +70,7 @@ export default function SignIn() {
         <h1 className="text-3xl font-extrabold tracking-tighter text-center mb-2">
           Welcome to <span className="text-violet-600">Linkleap</span>
         </h1>
+        <button onClick={() => console.log(auth.currentUser)}>check auth</button>
         <p className="mb-6 text-zinc-500 text-center">
           Login below, and start sharing your link to everyone!
         </p>
