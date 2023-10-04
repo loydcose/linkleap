@@ -78,6 +78,8 @@ export default async function Home({
     notFound()
   }
 
+  // todo: ayusin nalang yung sa image prop sa updateUser na object, it shouldnt be a full url
+
   return (
     <main className="w-11/12 max-w-md mx-auto min-h-screen flex items-center justify-center">
       <section className="bg-white rounded-xl p-8 w-full shadow-lg">
